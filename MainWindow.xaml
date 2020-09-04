@@ -9,6 +9,8 @@
     <Grid>
         <Button Name="btnOpenFile" Content="Открыть текстовый файл" HorizontalAlignment="Left" VerticalAlignment="Top" Width="168" Margin="10,10,0,0" Click="btnOpenFile_Click"/>
         <Button Name="btnLoadFileToDB" Content="Загрузить данные в БД" HorizontalAlignment="Left" VerticalAlignment="Top" Width="168" Margin="10,35,0,0" Click="btnLoadFileToDB_Click" />
+        <Button Content="Загрузить данные из БД" HorizontalAlignment="Left" Margin="10,60,0,0" VerticalAlignment="Top" Width="168" Click="Button_Click"/>
+        <DataGrid x:Name="dgMainTable" HorizontalAlignment="Left" Height="253" Margin="10,156,0,0" VerticalAlignment="Top" Width="772"/>
 
     </Grid>
 </Window>

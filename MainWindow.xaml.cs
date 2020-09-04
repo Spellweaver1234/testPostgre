@@ -5,31 +5,23 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
 
 namespace testPostgre
 {
     public partial class MainWindow : Window
     {
-        readonly string connectionString = "Host=localhost;Username=postgres;Password=postgres;Database=postgres";
-        readonly List<string> columnHeaders = new List<string> 
+        readonly List<string> columnHeaders = new List<string>
         { "oneA", "oneB", "oneC", "oneD", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten", "eleven", "twelve", "thirteen", "fourteen" };
-        public List<Row> rows = new List<Row>();
+        TextData textData;
+        MainTableData tableData;
+        DbPostgreManager postgreManager;
 
         public MainWindow()
         {
             InitializeComponent();
+            postgreManager = new DbPostgreManager();
         }
-
         private void btnOpenFile_Click(object sender, RoutedEventArgs e)
         {
             OpenFileDialog openFileDialog = new OpenFileDialog();
@@ -40,7 +32,8 @@ namespace testPostgre
             {
                 try
                 {
-                    rows = ReadFile(openFileDialog.FileName);
+                    var rows = TextFileManager.Read(openFileDialog.FileName);
+                    textData = new TextData(rows);
                     MessageBox.Show("Файл прочитан успешно");
                 }
                 catch
@@ -53,21 +46,17 @@ namespace testPostgre
         {
             try
             {
-                var version = TestConnection(connectionString);
-                if (version != null)
+                var version = postgreManager.TestConnection();
+                MessageBox.Show(version,"версия базы данных");
+
+                var tableIsCreate = postgreManager.CreateNewTable(columnHeaders);
+                if (version != null &&
+                    textData.rows.Count > 0 &&
+                    tableIsCreate)
                 {
-                    MessageBox.Show(version, "Подключение успешное");
-
-                    var result = LoadDataToDB(connectionString, rows, columnHeaders);
-
-                    if (result)
-                    {
-                        MessageBox.Show("Данные добавлены");
-                    }
-                    else
-                    {
-                        MessageBox.Show("Данные добавлены");
-                    }
+                    postgreManager.InsertData(columnHeaders, textData.rows, 17);
+                    textData = null;
+                    MessageBox.Show("Таблица создана и данные загружены");
                 }
             }
             catch
@@ -76,67 +65,11 @@ namespace testPostgre
             }
         }
 
-        private List<Row> ReadFile(string fileName)
+        private void Button_Click(object sender, RoutedEventArgs e)
         {
-            var result=new List<Row>();
-            using (StreamReader sr = new StreamReader(fileName, Encoding.Default))
-            {
-                string line;
-                while ((line = sr.ReadLine()) != null)
-                {
-                    var args = line.Split(new char[] { '|' }).Where(x => x != "").ToList();
-                    result.Add(new Row(args));
-                }
-            }
-
-            return result;
-        }
-        private string TestConnection(string connString)
-        {
-            string version = null;
-            using (var con = new NpgsqlConnection(connString))
-            {
-                con.Open();
-                var sql = "SELECT version()";
-
-                using (var cmd = new NpgsqlCommand(sql, con))
-                {
-                    version = cmd.ExecuteScalar().ToString();
-                }
-            }
-
-            return version;
-        }
-        private bool LoadDataToDB(string connString, List<Row> data, List<string> headers)
-        {
-            if (data.Count > 0)
-            {
-                using (var con = new NpgsqlConnection(connString))
-                {
-                    con.Open();
-
-                    using (var cmd = new NpgsqlCommand())
-                    {
-                        cmd.Connection = con;
-                        cmd.CommandText = "DROP TABLE IF EXISTS data";
-                        cmd.ExecuteNonQuery();
-
-                        cmd.CommandText = @"CREATE TABLE data(id SERIAL PRIMARY KEY";
-                        foreach (var item in headers)
-                        {
-                            cmd.CommandText += ", " + item + " VARCHAR(255)";
-                        }
-                        cmd.CommandText += ")";
-                        cmd.ExecuteNonQuery();
-                    }
-                }
-
-                return true;
-            }
-            else
-            {
-                return false;
-            }
+            var rows = postgreManager.SelectData();
+            tableData = new MainTableData(rows);
+            dgMainTable.ItemsSource = tableData.rows[0].args;
         }
     }
 }

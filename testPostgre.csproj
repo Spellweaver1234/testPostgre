@@ -86,7 +86,11 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="DbPostgreManager.cs" />
+    <Compile Include="MainTableData.cs" />
     <Compile Include="Row.cs" />
+    <Compile Include="TextData.cs" />
+    <Compile Include="TextFileManager.cs" />
     <Page Include="MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
